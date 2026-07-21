@@ -1,0 +1,15 @@
+[
+  { "pair": ["zinc", "copper"], "severity": "warn", "text": "Sustained high zinc intake can deplete copper. Commonly referenced ratio in literature is roughly 8-15:1 (zinc:copper)." },
+  { "pair": ["zinc", "calcium"], "severity": "note", "text": "Zinc and calcium compete for the same absorption pathway; commonly recommended to space apart." },
+  { "pair": ["zinc", "iron"], "severity": "note", "text": "Zinc and iron compete for absorption; commonly recommended to space apart." },
+  { "pair": ["zinc", "magnesium"], "severity": "note", "text": "High-dose zinc and magnesium may modestly compete for absorption at the same sitting." },
+  { "pair": ["calcium", "iron"], "severity": "note", "text": "Calcium can inhibit iron absorption when taken together." },
+  { "pair": ["folate", "b12"], "severity": "note", "text": "High folate intake can mask the blood-test signs of B12 deficiency; both are worth tracking together." },
+  { "pair": ["vitd", "vitk"], "severity": "good", "text": "Commonly taken together; D increases calcium absorption, K2 helps direct it to bone." },
+  { "pair": ["fishoil", "vitd"], "severity": "good", "text": "Both fat-soluble; taking together with a fat-containing meal is efficient for absorption." },
+  { "pair": ["fishoil", "vitk"], "severity": "good", "text": "Both fat-soluble; pairing with a meal supports absorption of both." },
+  { "pair": ["fishoil", "vite"], "severity": "good", "text": "Both fat-soluble; commonly stacked together with a meal." },
+  { "pair": ["vitc", "iron"], "severity": "good", "text": "Vitamin C can enhance non-heme iron absorption when taken together." },
+  { "pair": ["vite", "fishoil"], "severity": "note", "text": "Both may have mild blood-thinning effects at high doses; relevant if also on anticoagulant medication." },
+  { "pair": ["melatonin", "ashwagandha"], "severity": "note", "text": "Both are commonly used for sleep/relaxation; combined sedative effect has limited formal study." }
+]
