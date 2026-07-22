@@ -31,6 +31,15 @@ type RedundancyFlag = {
   severity: string;
   text: string;
 };
+type FlagType = "safety" | "redundancy" | "interaction" | "pairs-well";
+type CombinedFlag = {
+  key: string;
+  type: FlagType;
+  styleKey: string;
+  title: string;
+  text: string;
+  extra?: string;
+};
 
 const SEVERITY_STYLES: Record<string, string> = {
   "over-limit":
@@ -41,6 +50,16 @@ const SEVERITY_STYLES: Record<string, string> = {
   info: "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200",
   note: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
   warn: "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-200",
+};
+
+const FLAG_TYPE_META: Record<
+  FlagType,
+  { label: string; Icon: () => React.JSX.Element }
+> = {
+  safety: { label: "Safety", Icon: WarningIcon },
+  interaction: { label: "Interaction", Icon: LinkIcon },
+  redundancy: { label: "Redundancy", Icon: DuplicateIcon },
+  "pairs-well": { label: "Pairs well", Icon: CheckIcon },
 };
 
 const sortedSupplements = [...supplements].sort((a, b) =>
@@ -81,6 +100,49 @@ export default function Home() {
     () => getReferenceLimits(stack) as SupplementRow[],
     [stack]
   );
+
+  const combinedFlags = useMemo<CombinedFlag[]>(() => {
+    const safety: CombinedFlag[] = doseFlags.map((flag) => ({
+      key: `safety-${flag.id}`,
+      type: "safety",
+      styleKey: "over-limit",
+      title: `${flag.name} — over daily limit`,
+      text: flag.text,
+      extra:
+        flag.overLimitRisk ??
+        "Specific risk details aren't in our data yet for this supplement — check the NIH ODS fact sheet or a healthcare provider before continuing at this dose.",
+    }));
+
+    const interaction: CombinedFlag[] = flags
+      .filter((flag) => flag.severity !== "good")
+      .map((flag) => ({
+        key: `interaction-${flag.pair[0]}-${flag.pair[1]}`,
+        type: "interaction",
+        styleKey: flag.severity,
+        title: `${nameFor(flag.pair[0])} + ${nameFor(flag.pair[1])}`,
+        text: flag.text,
+      }));
+
+    const redundancy: CombinedFlag[] = redundancyFlags.map((flag) => ({
+      key: `redundancy-${flag.containerId}-${flag.id}`,
+      type: "redundancy",
+      styleKey: "redundant",
+      title: `${flag.name} + ${flag.containerName}`,
+      text: flag.text,
+    }));
+
+    const pairsWell: CombinedFlag[] = flags
+      .filter((flag) => flag.severity === "good")
+      .map((flag) => ({
+        key: `pairs-well-${flag.pair[0]}-${flag.pair[1]}`,
+        type: "pairs-well",
+        styleKey: "good",
+        title: `${nameFor(flag.pair[0])} + ${nameFor(flag.pair[1])}`,
+        text: flag.text,
+      }));
+
+    return [...safety, ...interaction, ...redundancy, ...pairsWell];
+  }, [doseFlags, flags, redundancyFlags]);
 
   const dailyTotals = useMemo(() => {
     const totals = new Map<string, number>();
@@ -164,82 +226,37 @@ export default function Home() {
         </section>
 
         <section>
-          <SectionHeader title="Dose Safety Flags" dotColorClass="bg-red-500" />
+          <SectionHeader title="Flags" dotColorClass="bg-zinc-500" />
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-500">
             General information only — not a substitute for medical advice.
           </p>
-          {doseFlags.length === 0 ? (
+          {combinedFlags.length === 0 ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-500">
-              No supplement in your stack currently exceeds its daily
-              reference upper limit.
+              No flags for your current stack.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {doseFlags.map((flag) => (
-                <li
-                  key={flag.id}
-                  className={`rounded-md border px-3 py-2 text-sm ${SEVERITY_STYLES["over-limit"]}`}
-                >
-                  <p className="font-medium">⚠ {flag.name} — over daily limit</p>
-                  <p className="mt-0.5">{flag.text}</p>
-                  <p className="mt-1 italic opacity-90">
-                    {flag.overLimitRisk ??
-                      "Specific risk details aren't in our data yet for this supplement — check the NIH ODS fact sheet or a healthcare provider before continuing at this dose."}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section>
-          <SectionHeader title="Redundancy Flags" dotColorClass="bg-indigo-500" />
-          {redundancyFlags.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-500">
-              No likely duplicate ingredients across your combination
-              products and standalone supplements.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {redundancyFlags.map((flag) => (
-                <li
-                  key={`${flag.containerId}-${flag.id}`}
-                  className={`rounded-md border px-3 py-2 text-sm ${SEVERITY_STYLES.redundant}`}
-                >
-                  <p className="font-medium">
-                    {flag.name} + {flag.containerName}
-                  </p>
-                  <p className="mt-0.5">{flag.text}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section>
-          <SectionHeader
-            title="Timing & Interaction Flags"
-            dotColorClass="bg-sky-600"
-          />
-          {flags.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-500">
-              No timing or interaction flags for the current stack.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {flags.map((flag) => (
-                <li
-                  key={`${flag.pair[0]}-${flag.pair[1]}`}
-                  className={`rounded-md border px-3 py-2 text-sm ${
-                    SEVERITY_STYLES[flag.severity] ?? SEVERITY_STYLES.note
-                  }`}
-                >
-                  <p className="font-medium">
-                    {nameFor(flag.pair[0])} + {nameFor(flag.pair[1])}
-                  </p>
-                  <p className="mt-0.5">{flag.text}</p>
-                </li>
-              ))}
+              {combinedFlags.map((flag) => {
+                const { label, Icon } = FLAG_TYPE_META[flag.type];
+                return (
+                  <li
+                    key={flag.key}
+                    className={`rounded-md border px-3 py-2 text-sm ${
+                      SEVERITY_STYLES[flag.styleKey] ?? SEVERITY_STYLES.note
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide opacity-70">
+                      <Icon />
+                      {label}
+                    </div>
+                    <p className="mt-1 font-medium">{flag.title}</p>
+                    <p className="mt-0.5">{flag.text}</p>
+                    {flag.extra && (
+                      <p className="mt-1 italic opacity-90">{flag.extra}</p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -341,6 +358,92 @@ function ClockIcon() {
     >
       <circle cx="8" cy="8" r="6.5" />
       <path d="M8 4.5V8l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <path d="M8 2.3 14.7 13.5H1.3Z" strokeLinejoin="round" />
+      <path d="M8 6.3V9.3" strokeLinecap="round" />
+      <circle cx="8" cy="11.4" r="0.35" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <path
+        d="M7 4.6 8.6 3a2.2 2.2 0 0 1 3.1 3.1L10 7.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 11.4 7.4 13a2.2 2.2 0 0 1-3.1-3.1L6 8.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6.3 9.7 9.7 6.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DuplicateIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <rect x="2.5" y="5" width="7.5" height="7.5" rx="1" />
+      <path d="M5.5 5V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="6.5" />
+      <path
+        d="M5.2 8.2 7.1 10l3.5-4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
