@@ -59,7 +59,14 @@ function isValidAmount(raw: string | undefined) {
 
 export default function Home() {
   const [stack, setStack] = useState<StackItem[]>([]);
-  const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [draftId, setDraftId] = useState<Record<Period, string>>({
+    AM: "",
+    PM: "",
+  });
+  const [draftAmount, setDraftAmount] = useState<Record<Period, string>>({
+    AM: "",
+    PM: "",
+  });
 
   const flags = useMemo(() => getFlags(stack) as InteractionFlag[], [stack]);
   const doseFlags = useMemo(
@@ -84,15 +91,19 @@ export default function Home() {
     return totals;
   }, [stack]);
 
-  function addTo(id: string, period: Period) {
+  function addToPeriod(period: Period) {
+    const id = draftId[period];
+    if (!id) return;
     const supplement = supplements.find((s) => s.id === id);
-    const amount = supplement?.unit ? Number(amounts[id]) : undefined;
-    if (supplement?.unit && !isValidAmount(amounts[id])) return;
+    if (supplement?.unit && !isValidAmount(draftAmount[period])) return;
+    const amount = supplement?.unit ? Number(draftAmount[period]) : undefined;
 
     setStack((prev) => [
       ...prev.filter((item) => !(item.id === id && item.period === period)),
       { id, period, amount },
     ]);
+    setDraftId((prev) => ({ ...prev, [period]: "" }));
+    setDraftAmount((prev) => ({ ...prev, [period]: "" }));
   }
 
   function removeFrom(id: string, period: Period) {
@@ -119,86 +130,35 @@ export default function Home() {
           </p>
         </header>
 
-        <section>
-          <ul className="flex flex-col gap-2">
-            {sortedSupplements.map((s) => {
-              const trackable = Boolean(s.unit);
-              const valid = !trackable || isValidAmount(amounts[s.id]);
-              return (
-                <li
-                  key={s.id}
-                  className="flex items-center justify-between gap-4 rounded-lg border border-paper-border bg-paper px-4 py-3 shadow-sm"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                        {s.name}
-                      </p>
-                      {s.fatSoluble && <FatSolubleBadge />}
-                    </div>
-                    <p className="mt-0.5 flex items-center gap-1 font-mono text-xs text-zinc-500 dark:text-zinc-500">
-                      <ClockIcon />
-                      {s.category}
-                      {trackable ? ` · upper limit ${s.upperLimit}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {trackable && (
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={amounts[s.id] ?? ""}
-                          onChange={(e) =>
-                            setAmounts((prev) => ({
-                              ...prev,
-                              [s.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="0"
-                          aria-label={`Dose amount for ${s.name}`}
-                          className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                        />
-                        <span className="text-xs text-zinc-500 dark:text-zinc-500">
-                          {s.unit}
-                        </span>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      disabled={!valid}
-                      onClick={() => addTo(s.id, "AM")}
-                      className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-                    >
-                      + AM
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!valid}
-                      onClick={() => addTo(s.id, "PM")}
-                      className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-                    >
-                      + PM
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <StackColumn
+          <PeriodSection
             title="Morning"
             dotColorClass="bg-amber-500"
             items={am}
+            draftId={draftId.AM}
+            draftAmount={draftAmount.AM}
+            onDraftIdChange={(id) =>
+              setDraftId((prev) => ({ ...prev, AM: id }))
+            }
+            onDraftAmountChange={(amount) =>
+              setDraftAmount((prev) => ({ ...prev, AM: amount }))
+            }
+            onAdd={() => addToPeriod("AM")}
             onRemove={(id) => removeFrom(id, "AM")}
           />
-          <StackColumn
+          <PeriodSection
             title="Evening"
             dotColorClass="bg-blue-900"
             items={pm}
+            draftId={draftId.PM}
+            draftAmount={draftAmount.PM}
+            onDraftIdChange={(id) =>
+              setDraftId((prev) => ({ ...prev, PM: id }))
+            }
+            onDraftAmountChange={(amount) =>
+              setDraftAmount((prev) => ({ ...prev, PM: amount }))
+            }
+            onAdd={() => addToPeriod("PM")}
             onRemove={(id) => removeFrom(id, "PM")}
           />
         </section>
@@ -385,20 +345,77 @@ function ClockIcon() {
   );
 }
 
-function StackColumn({
+function PeriodSection({
   title,
   dotColorClass,
   items,
+  draftId,
+  draftAmount,
+  onDraftIdChange,
+  onDraftAmountChange,
+  onAdd,
   onRemove,
 }: {
   title: string;
   dotColorClass: string;
   items: StackItem[];
+  draftId: string;
+  draftAmount: string;
+  onDraftIdChange: (id: string) => void;
+  onDraftAmountChange: (amount: string) => void;
+  onAdd: () => void;
   onRemove: (id: string) => void;
 }) {
+  const availableSupplements = sortedSupplements.filter(
+    (s) => !items.some((item) => item.id === s.id)
+  );
+  const draftSupplement = supplements.find((s) => s.id === draftId);
+  const trackable = Boolean(draftSupplement?.unit);
+  const canAdd = Boolean(draftId) && (!trackable || isValidAmount(draftAmount));
+
   return (
     <div>
       <SectionHeader title={title} dotColorClass={dotColorClass} />
+      <div className="mb-3 flex items-center gap-2">
+        <select
+          value={draftId}
+          onChange={(e) => onDraftIdChange(e.target.value)}
+          aria-label={`Add a supplement to ${title}`}
+          className="min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        >
+          <option value="">Add a supplement…</option>
+          {availableSupplements.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        {trackable && (
+          <div className="flex shrink-0 items-center gap-1">
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={draftAmount}
+              onChange={(e) => onDraftAmountChange(e.target.value)}
+              placeholder="0"
+              aria-label={`Dose amount for ${draftSupplement?.name}`}
+              className="w-16 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+            <span className="text-xs text-zinc-500 dark:text-zinc-500">
+              {draftSupplement?.unit}
+            </span>
+          </div>
+        )}
+        <button
+          type="button"
+          disabled={!canAdd}
+          onClick={onAdd}
+          className="shrink-0 rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+        >
+          Add
+        </button>
+      </div>
       {items.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-500">Empty</p>
       ) : (
