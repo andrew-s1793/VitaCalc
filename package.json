@@ -1,7 +1,9 @@
 {
-  "name": "vitacalc",
+  "name": "vitasense",
   "version": "0.1.0",
   "private": true,
+  "author": "Andrew Samarro",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

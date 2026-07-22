@@ -31,7 +31,7 @@ type RedundancyFlag = {
   severity: string;
   text: string;
 };
-type FlagType = "safety" | "redundancy" | "interaction" | "pairs-well";
+type FlagType = "safety" | "redundancy" | "interaction" | "pairing";
 type CombinedFlag = {
   key: string;
   type: FlagType;
@@ -58,7 +58,7 @@ const FLAG_TYPE_META: Record<
   safety: { label: "Safety", Icon: WarningIcon },
   interaction: { label: "Interaction", Icon: LinkIcon },
   redundancy: { label: "Redundancy", Icon: DuplicateIcon },
-  "pairs-well": { label: "Pairs well", Icon: CheckIcon },
+  "pairing": { label: "Pairing", Icon: CheckIcon },
 };
 
 const sortedSupplements = [...supplements].sort((a, b) =>
@@ -105,7 +105,7 @@ export default function Home() {
       key: `safety-${flag.id}`,
       type: "safety",
       styleKey: "over-limit",
-      title: `${flag.name} — over daily limit`,
+      title: flag.name,
       text: flag.text,
       extra:
         flag.overLimitRisk ??
@@ -134,7 +134,7 @@ export default function Home() {
       .filter((flag) => flag.severity === "good")
       .map((flag) => ({
         key: `pairs-well-${flag.pair[0]}-${flag.pair[1]}`,
-        type: "pairs-well",
+        type: "pairing",
         styleKey: "good",
         title: `${nameFor(flag.pair[0])} + ${nameFor(flag.pair[1])}`,
         text: flag.text,
@@ -181,7 +181,7 @@ export default function Home() {
       <main className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
         <header>
           <h1 className="font-serif text-4xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-            VitaCalc
+            VitaSense
           </h1>
           <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
             Enter the dose you actually take for each supplement and add it to
@@ -226,7 +226,7 @@ export default function Home() {
         <section>
           <SectionHeader title="Flags" icon={<FlagIcon />} />
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-500">
-            General information only — not a substitute for medical advice.
+            Informational only — not medical advice.
           </p>
           {combinedFlags.length === 0 ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-500">
@@ -267,7 +267,7 @@ export default function Home() {
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
                   <th className="pb-2 pr-4">Supplement</th>
-                  <th className="pb-2 pr-4">Your dose</th>
+                  <th className="pb-2 pr-4">Dose</th>
                   <th className="pb-2 pr-4">Upper limit</th>
                   <th className="pb-2 pr-4">RDA*</th>
                   <th className="pb-2">Timing</th>
@@ -281,7 +281,7 @@ export default function Home() {
                       className="py-4 text-center text-zinc-500 dark:text-zinc-500"
                     >
                       Add supplements above to see their reference upper
-                      limits, RDA, and timing appear here.
+                      limits, RDA, and timing recommendation appear here.
                     </td>
                   </tr>
                 ) : (
@@ -327,6 +327,16 @@ export default function Home() {
             people.
           </p>
         </section>
+
+        <footer className="border-t border-paper-border pt-6 text-xs text-zinc-500 dark:text-zinc-500">
+          <p>
+            Informational only — not medical advice. Reference data sourced
+            from general published sources (e.g. NIH Office of Dietary
+            Supplements fact sheets). Individual needs vary — consult a
+            doctor or pharmacist before starting or altering your supplement
+            routine.
+          </p>
+        </footer>
       </main>
     </div>
   );
@@ -354,27 +364,9 @@ function SectionHeader({
 
 function FatSolubleBadge() {
   return (
-    <span className="rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+    <span className="shrink-0 rounded-full border border-zinc-300 px-1.5 py-0 text-[9px] font-medium leading-4 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
       fat-soluble
     </span>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="12"
-      height="12"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      className="shrink-0"
-      aria-hidden="true"
-    >
-      <circle cx="8" cy="8" r="6.5" />
-      <path d="M8 4.5V8l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 
@@ -619,30 +611,24 @@ function PeriodSection({
             return (
               <li
                 key={item.id}
-                className="flex items-start justify-between gap-2 rounded-lg border border-paper-border bg-paper px-3 py-2.5 shadow-sm"
+                className="flex items-center justify-between gap-2 rounded-full border border-paper-border bg-paper px-4 py-2 shadow-sm"
               >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      {nameFor(item.id)}
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    {nameFor(item.id)}
+                  </span>
+                  {item.amount != null && (
+                    <span className="shrink-0 font-mono text-xs text-zinc-500 dark:text-zinc-500">
+                      · {item.amount} {supplement?.unit}
                     </span>
-                    {supplement?.fatSoluble && <FatSolubleBadge />}
-                  </div>
-                  {(item.amount != null || supplement?.timing) && (
-                    <p className="mt-1 flex items-center gap-1 font-mono text-xs text-zinc-500 dark:text-zinc-500">
-                      <ClockIcon />
-                      {item.amount != null
-                        ? `${item.amount} ${supplement?.unit} · `
-                        : ""}
-                      {supplement?.timing}
-                    </p>
                   )}
+                  {supplement?.fatSoluble && <FatSolubleBadge />}
                 </div>
                 <button
                   type="button"
                   onClick={() => onRemove(item.id)}
                   aria-label={`Remove ${nameFor(item.id)}`}
-                  className="text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
+                  className="shrink-0 text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
                 >
                   ×
                 </button>

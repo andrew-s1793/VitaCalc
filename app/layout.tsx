@@ -19,7 +19,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "VitaCalc",
+  title: "VitaSense",
   description: "Check your supplement stack for timing and interaction flags.",
 };
 
