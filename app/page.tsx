@@ -261,22 +261,32 @@ export default function Home() {
           )}
         </section>
 
-        {referenceRows.length > 0 && (
-          <section>
-            <SectionHeader title="Reference Limits" dotColorClass="bg-zinc-400" />
-            <div className="overflow-x-auto rounded-lg border border-paper-border bg-paper p-4 shadow-sm">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
-                    <th className="pb-2 pr-4">Supplement</th>
-                    <th className="pb-2 pr-4">Your dose</th>
-                    <th className="pb-2 pr-4">Upper limit</th>
-                    <th className="pb-2 pr-4">RDA</th>
-                    <th className="pb-2">Timing</th>
+        <section>
+          <SectionHeader title="Reference Limits" dotColorClass="bg-zinc-400" />
+          <div className="overflow-x-auto rounded-lg border border-paper-border bg-paper p-4 shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500">
+                  <th className="pb-2 pr-4">Supplement</th>
+                  <th className="pb-2 pr-4">Your dose</th>
+                  <th className="pb-2 pr-4">Upper limit</th>
+                  <th className="pb-2 pr-4">RDA*</th>
+                  <th className="pb-2">Timing</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
+                {referenceRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="py-4 text-center text-zinc-500 dark:text-zinc-500"
+                    >
+                      Add supplements above to see their reference upper
+                      limits, RDA, and timing appear here.
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                  {referenceRows.map((row) => {
+                ) : (
+                  referenceRows.map((row) => {
                     const total = dailyTotals.get(row.id);
                     const over =
                       row.upperLimitValue != null &&
@@ -307,12 +317,17 @@ export default function Home() {
                         </td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+            * RDA (Recommended Dietary Allowance): the average daily intake
+            level sufficient to meet the nutrient needs of most healthy
+            people.
+          </p>
+        </section>
       </main>
     </div>
   );
