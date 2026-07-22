@@ -47,9 +47,8 @@ const SEVERITY_STYLES: Record<string, string> = {
   redundant:
     "border-indigo-200 bg-indigo-50 text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950 dark:text-indigo-200",
   good: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
-  info: "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200",
-  note: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  warn: "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-200",
+  interaction:
+    "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200",
 };
 
 const FLAG_TYPE_META: Record<
@@ -118,7 +117,7 @@ export default function Home() {
       .map((flag) => ({
         key: `interaction-${flag.pair[0]}-${flag.pair[1]}`,
         type: "interaction",
-        styleKey: flag.severity,
+        styleKey: "interaction",
         title: `${nameFor(flag.pair[0])} + ${nameFor(flag.pair[1])}`,
         text: flag.text,
       }));
@@ -186,9 +185,8 @@ export default function Home() {
           </h1>
           <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
             Enter the dose you actually take for each supplement and add it to
-            a morning or evening list to check it against reference upper
-            limits and timing/interaction flags. Informational only — not
-            medical advice.
+            a morning or evening list to check it against reference limits
+            and usage flags. Informational only — not medical advice.
           </p>
         </header>
 
@@ -242,7 +240,8 @@ export default function Home() {
                   <li
                     key={flag.key}
                     className={`rounded-md border px-3 py-2 text-sm ${
-                      SEVERITY_STYLES[flag.styleKey] ?? SEVERITY_STYLES.note
+                      SEVERITY_STYLES[flag.styleKey] ??
+                      SEVERITY_STYLES.interaction
                     }`}
                   >
                     <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide opacity-70">
@@ -323,7 +322,7 @@ export default function Home() {
             </table>
           </div>
           <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
-            * RDA (Recommended Dietary Allowance): the average daily intake
+            * RDA (Recommended Dietary Allowance): The average daily intake
             level sufficient to meet the nutrient needs of most healthy
             people.
           </p>
