@@ -193,7 +193,7 @@ export default function Home() {
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <PeriodSection
             title="Morning"
-            dotColorClass="bg-amber-500"
+            icon={<SunIcon className="text-amber-500" />}
             items={am}
             draftId={draftId.AM}
             draftAmount={draftAmount.AM}
@@ -208,7 +208,7 @@ export default function Home() {
           />
           <PeriodSection
             title="Evening"
-            dotColorClass="bg-blue-900"
+            icon={<MoonIcon className="text-blue-900 dark:text-blue-400" />}
             items={pm}
             draftId={draftId.PM}
             draftAmount={draftAmount.PM}
@@ -224,7 +224,7 @@ export default function Home() {
         </section>
 
         <section>
-          <SectionHeader title="Flags" dotColorClass="bg-zinc-500" />
+          <SectionHeader title="Flags" icon={<FlagIcon />} />
           <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-500">
             General information only — not a substitute for medical advice.
           </p>
@@ -261,7 +261,7 @@ export default function Home() {
         </section>
 
         <section>
-          <SectionHeader title="Reference Limits" dotColorClass="bg-zinc-400" />
+          <SectionHeader title="Reference Limits" icon={<ClipboardIcon />} />
           <div className="overflow-x-auto rounded-lg border border-paper-border bg-paper p-4 shadow-sm">
             <table className="w-full text-left text-sm">
               <thead>
@@ -334,14 +334,16 @@ export default function Home() {
 
 function SectionHeader({
   title,
-  dotColorClass,
+  icon,
 }: {
   title: string;
-  dotColorClass: string;
+  icon: React.ReactNode;
 }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <span className={`h-2 w-2 shrink-0 rounded-full ${dotColorClass}`} />
+      <span className="flex shrink-0 items-center justify-center text-zinc-500 dark:text-zinc-400">
+        {icon}
+      </span>
       <h2 className="font-serif text-lg font-semibold text-zinc-900 dark:text-zinc-100">
         {title}
       </h2>
@@ -462,9 +464,84 @@ function CheckIcon() {
   );
 }
 
+function SunIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className={`shrink-0 ${className}`}
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="3" />
+      <path
+        d="M8 1.3v1.6M8 13.1v1.6M1.3 8h1.6M13.1 8h1.6M3.4 3.4l1.15 1.15M11.45 11.45l1.15 1.15M3.4 12.6l1.15-1.15M11.45 4.55l1.15-1.15"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function MoonIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className={`shrink-0 ${className}`}
+      aria-hidden="true"
+    >
+      <path d="M13.3 9.7A5.6 5.6 0 1 1 6.3 2.7a4.4 4.4 0 0 0 7 7Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FlagIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className={`shrink-0 ${className}`}
+      aria-hidden="true"
+    >
+      <path d="M3.5 1.5v13" strokeLinecap="round" />
+      <path d="M3.5 2.3h8.2l-2.1 2.6 2.1 2.6H3.5Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ClipboardIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      className={`shrink-0 ${className}`}
+      aria-hidden="true"
+    >
+      <rect x="3" y="2.7" width="10" height="11.8" rx="1.2" />
+      <rect x="5.5" y="1.3" width="5" height="2.2" rx="0.6" />
+      <path d="M5.5 7h5M5.5 9.4h5M5.5 11.8h3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function PeriodSection({
   title,
-  dotColorClass,
+  icon,
   items,
   draftId,
   draftAmount,
@@ -474,7 +551,7 @@ function PeriodSection({
   onRemove,
 }: {
   title: string;
-  dotColorClass: string;
+  icon: React.ReactNode;
   items: StackItem[];
   draftId: string;
   draftAmount: string;
@@ -492,7 +569,7 @@ function PeriodSection({
 
   return (
     <div>
-      <SectionHeader title={title} dotColorClass={dotColorClass} />
+      <SectionHeader title={title} icon={icon} />
       <div className="mb-3 flex items-center gap-2">
         <select
           value={draftId}
